@@ -12,3 +12,9 @@ str(BreastCancer)
 
 # Mostrar los primeros 10 elementos
 head(BreastCancer, 10)
+
+# Cantidad de observaciones
+nrow(BreastCancer)
+
+# Cantidad de variables
+ncol(BreastCancer)
