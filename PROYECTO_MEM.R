@@ -68,5 +68,7 @@ cov(datos, use = "complete.obs")
 # Seleccionar sólo las características (excluir id. y clase)
 caracteristicas <- datos[, -c(1, ncol(datos))]
 
-# Realizar la prueba de normalidad multivariada
-mvn(caracteristicas)
+# Realizar las pruebas de normalidad multivariada
+mvn(caracteristicas, mvnTest = "hz")
+mvn(caracteristicas, mvnTest = "mardia")
+mvn(caracteristicas, mvnTest = "royston")
