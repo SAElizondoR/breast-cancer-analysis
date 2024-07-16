@@ -16,6 +16,12 @@ if (!requireNamespace("corrplot")) {
 }
 library(corrplot)
 
+# Biblioteca para revisar normalidad multivariada
+if (!requireNamespace("MVN")) {
+  install.packages("MVN")
+}
+library(MVN)
+
 # Cargar el conjunto de datos de cáncer de mama
 data("BreastCancer")
 
@@ -26,6 +32,8 @@ datos <- BreastCancer %>%
     Class = ifelse(Class == "benign", 0, 1),
     across(-Class, as.numeric)
   )
+
+# 1. ANÁLISIS EXPLORATORIO DE LOS DATOS
 
 # Mostrar la estructura de los datos
 str(datos)
@@ -54,3 +62,11 @@ matrix(colMeans(datos, na.rm = TRUE), ncol = 1)
 
 # Matriz de varianza y covarianza
 cov(datos, use = "complete.obs")
+
+# 2. PRUEBAS DE BONDAD DE AJUSTE
+
+# Seleccionar sólo las características (excluir id. y clase)
+caracteristicas <- datos[, -c(1, ncol(datos))]
+
+# Realizar la prueba de normalidad multivariada
+mvn(caracteristicas)
