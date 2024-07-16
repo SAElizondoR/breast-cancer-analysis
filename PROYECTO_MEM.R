@@ -48,3 +48,9 @@ corrplot(correlaciones,
          tl.cex = 0.8,
          number.cex = 0.7,
          col = colorRampPalette(c("white", "#B22222"))(200))
+
+# Vector de medias
+matrix(colMeans(datos, na.rm = TRUE), ncol = 1)
+
+# Matriz de varianza y covarianza
+cov(datos, use = "complete.obs")
