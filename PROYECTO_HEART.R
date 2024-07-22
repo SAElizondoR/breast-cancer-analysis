@@ -105,7 +105,7 @@ corrplot(correlaciones,
 colMeans(datos, na.rm = TRUE) %>%
   matrix(ncol = 1)
 
-cov(datos, use = "complete.obs")
+a<-cov(datos, use = "complete.obs")
 
 ## 2. PRUEBAS DE BONDAD DE AJUSTE #############################################
 
@@ -191,8 +191,8 @@ colnames(ic_values) <- c("age", "ejection_fraction", "platelets",
 #Ha: El vector de medias difiere entre pacientes que murieron y no
 
 # Filtrar datos de pacientes muertos y vivos
-dead <- datos_orig %>% filter(death_event == 1) %>% select(-death_event,-sex)
-alive <- datos_orig %>% filter(death_event == 0) %>% select(-death_event,-sex)
+dead <- datos_orig %>% filter(death_event == 1) %>% select(-death_event,-sex,-serum_creatinine)
+alive <- datos_orig %>% filter(death_event == 0) %>% select(-death_event,-sex,-serum_creatinine)
 
 # Calcular vectores de medias y matrices de covarianza
 media_d <- colMeans(dead) %>% matrix(ncol = 1)
@@ -211,7 +211,7 @@ sp_esc <- sp * (1 / n1 + 1 / n2)
 # Calcular estadístico T²
 delta <- media_d - media_a
 t(delta) %*% solve(sp_esc) %*% delta
-# EP = 6.74
+# EP = 6.69
 
 # Calcular valor crítico F y región de rechazo
 valor_f <- qf(1 - 0.05, p, n1 + n2 - p - 1)
