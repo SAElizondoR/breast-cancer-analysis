@@ -54,15 +54,17 @@ mvn(caracteristicas, mvnTest = "hz")
 #H0: Independencia para las variables
 #Ha: Las variables no son independientes
 
+p <- ncol(caracteristicas)
+n <- nrow(caracteristicas)
 R <- cor(caracteristicas)
 
 # Calcular estadístico de prueba
--2 * (1 - ((8 + 11) / (6 * 50))) * log(det(R)**(50 / 2)) #EP = 8.77
+-2 * (1 - ((2 * p + 11) / (6 * n))) * log(det(R)**(50 / 2)) #EP = 8.77
 
 # Calcular valor crítico
-qchisq(1 - 0.05, 4 * (1 + 4) / 2) # RR = 18.31
+qchisq(1 - 0.05, p * (p - 1) / 2) # RR = 12.59
 
-# Rechazo H0 si EP = 8.77 > RR = 18.31
+# Rechazo H0 si EP = 8.77 > RR = 12.59
 
 # No rechazo H0, las variables son independientes
 
@@ -89,8 +91,6 @@ covs <- cov(caracteristicas)
 inv_cov <- solve(cov(caracteristicas))
 
 # Calcular estadístico T²
-n <- nrow(datos)
-p <- length(mu_hipotesis)
 t2 <- n * t(x_barra - mu_hipotesis) %*% inv_cov %*% (x_barra - mu_hipotesis)
 
 # Calcular valor p
