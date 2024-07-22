@@ -213,18 +213,29 @@ data.frame(
   Superior = lim_sup
 )
 
-## 4. TÉCNICA MULTIVARIADA ##############################################################
 
-#estandarizacion
-cp<-scale(caracteristicas)
-summary(scale(caracteristicas))
+## 4. TÉCNICA MULTIVARIADA ####################################################
 
-#descripcion
-prcomp(cp)
-summary(prcomp(cp))
+# Normalización de datos
+cp <- scale(caracteristicas)
 
+# Mostrar resumen de los datos normalizados
+summary(cp)
 
-#grafica de codo
-fviz_eig(prcomp(cp),addlabels=T)
+# Realizar PCA
+pca_result <- prcomp(cp)
 
-#Tres componentes
+# Resumen del PCA
+summary(pca_result)
+
+# Gráfica de codo
+fviz_eig(pca_result, addlabels = TRUE)
+
+# Según el criterio del codo, se eligen 3 componentes
+num_components <- 3
+
+# Mostrar los coeficientes de la transformación
+pca_result$rotation[, 1:num_components]
+
+# Conjunto de datos transformado al nuevo espacio
+pca_result$x[, 1:num_components]
