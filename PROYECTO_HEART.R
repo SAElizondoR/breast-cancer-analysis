@@ -40,30 +40,31 @@ colMeans(datos, na.rm = TRUE) %>%
 
 cov(datos, use = "complete.obs")
 
-## 2. PRUEBAS DE BONDAD DE AJUSTE ####################################################
+## 2. PRUEBAS DE BONDAD DE AJUSTE #############################################
 
-caracteristicas<- datos %>% select(-serum_creatinine)
+caracteristicas <- datos %>% select(-serum_creatinine)
 
 # Realizar las pruebas de normalidad multivariada
 mvn(caracteristicas, mvnTest = "hz")
 
-## 3. PRUEBAS COMPARATIVAS ##########################################################
+## 3. PRUEBAS COMPARATIVAS ####################################################
 
-##Independencia
+## Independencia
 
-#H0: independencia para las variables
-#Ha: las variables no son independientes
+#H0: Independencia para las variables
+#Ha: Las variables no son independientes
 
-R<- cor(caracteristicas)
+R <- cor(caracteristicas)
 
--2*(1-((8+11)/(6*50)))*log(det(R)**(50/2)) #EP 8.77
+-2 * (1 - ((8 + 11) / (6 * 50))) * log(det(R)**(50 / 2)) #EP = 8.77
 
-qchisq(1-0.05,4*(1+4)/2) #RR 18.31
+qchisq(1 - 0.05, 4 * (1 + 4) / 2) # RR = 18.31
 
-#Rechazo H0 si EP = 8.77 > RR = 18.31
+# Rechazo H0 si EP = 8.77 > RR = 18.31
 
-#NO rechazo H0, se cumple la igualdad de las varianzas
-#Las variables de edad, ejection_fraction, platelets y serum_sodium son independientes 
+# No rechazo H0, las variables son independientes
+#Las variables de edad, ejection_fraction, platelets y serum_sodium
+# son independientes 
 
 
 ##Prueba de medias
