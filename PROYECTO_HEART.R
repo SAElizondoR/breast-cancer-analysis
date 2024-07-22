@@ -218,7 +218,7 @@ valor_f <- qf(1 - 0.05, p, n1 + n2 - p - 1)
 region_rechazo <- valor_f * p * (n1 + n2 - 2) / (n1 + n2 - p - 1) # RR = 11.00
 
 # Rechazo H0 si t² > región de rechazo
-# En este caso: 6.74 < 11.00, por lo que no se rechaza H0
+# En este caso: 6.69 < 11.00, por lo que no se rechaza H0
 # El vector de medias no difiere entre pacientes que murieron y no
 
 # Calcular intervalos de confianza
@@ -238,8 +238,8 @@ data.frame(
 #Ha: El vector de medias difiere entre pacientes masculinos y femeninos
 
 # Filtrar datos de pacientes masculinos y femeninos
-masc <- datos_orig %>% filter(sex == 1) %>% select(-death_event, -sex)
-fem <- datos_orig %>% filter(sex == 0) %>% select(-death_event, -sex)
+masc <- datos_orig %>% filter(sex == 1) %>% select(-death_event, -sex, -serum_creatinine)
+fem <- datos_orig %>% filter(sex == 0) %>% select(-death_event, -sex, -serum_creatinine)
 
 # Calcular vectores de medias y matrices de covarianza
 media_m <- colMeans(masc) %>% matrix(ncol = 1)
@@ -257,14 +257,14 @@ sp_esc <- sp * (1 / n1 + 1 / n2)
 
 # Calcular estadístico T²
 delta <- media_m - media_f
-t(delta) %*% solve(sp_esc) %*% delta # EP = 8.32
+t(delta) %*% solve(sp_esc) %*% delta # EP = 6.57
 
 # Calcular valor crítico F y región de rechazo
 valor_f <- qf(1 - 0.05, p, n1 + n2 - p - 1)
 region_rechazo <- valor_f * p * (n1 + n2 - 2) / (n1 + n2 - p - 1) # RR = 11.00
 
 # Rechazo H0 si t² > región de rechazo
-# En este caso: 8.32 < 11.00, por lo que no se rechaza H0
+# En este caso: 6.57 < 11.00, por lo que no se rechaza H0
 # El vector de medias no difiere entre pacientes masculinos y femeninos
 
 # Calcular intervalos de confianza
