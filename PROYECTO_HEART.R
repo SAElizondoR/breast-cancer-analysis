@@ -1,18 +1,18 @@
-packages <- c("tidyverse", "janitor", "readxl", "rstudioapi","openxlsx","dplyr")
-pacman::p_load( packages , character.only = TRUE )
+# Cargar paquetes necesarios
+library(pacman)
+packages <- c("tidyverse", "janitor", "readxl", "rstudioapi", "openxlsx",
+              "dplyr", "corrplot", "MVN", "factoextra", "ggplot2")
+pacman::p_load(char = packages, character.only = TRUE)
+
+# Configurar el directorio de trabajo
 setwd(dirname(getActiveDocumentContext()$path))
-rm(packages)
-library(car)
-library(corrplot)
-library(MVN)
-library(factoextra)
-library(ggplot2)
 
-datos<-as.data.frame(read_excel("muestra_heart.xlsx"))%>% clean_names()%>%
-  select(-death_event)%>%
-  select(-sex)
+# Cargar y limpiar datos
+datos <- as.data.frame(read_excel("muestra_heart.xlsx")) %>%
+  clean_names() %>%
+  select(-death_event, -sex)
 
-## 1. ANÁLISIS EXPLORATORIO DE LOS DATOS ##########################################
+## 1. ANÁLISIS EXPLORATORIO DE LOS DATOS ######################################
 
 # Mostrar la estructura de los datos
 str(datos)
@@ -23,10 +23,8 @@ head(datos, 10)
 # Estadísticas descriptivas
 summary(datos)
 
-# Calcular matriz de correlación
+# Calcular y graficar matriz de correlación
 correlaciones <- cor(datos)
-
-# Graficar correlaciones en un mapa de calor
 corrplot(correlaciones,
          method = "color",
          addCoef.col = "black",
@@ -36,10 +34,10 @@ corrplot(correlaciones,
          number.cex = 0.7,
          col = colorRampPalette(c("white", "#B22222"))(200))
 
-# Vector de medias
-matrix(colMeans(datos, na.rm = TRUE), ncol = 1)
+# Vector de medias y matriz de varianza y covarianza
+colMeans(datos, na.rm = TRUE) %>%
+  matrix(ncol = 1)
 
-# Matriz de varianza y covarianza
 cov(datos, use = "complete.obs")
 
 ## 2. PRUEBAS DE BONDAD DE AJUSTE ####################################################
