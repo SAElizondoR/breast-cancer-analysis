@@ -1,4 +1,5 @@
 # Cargar paquetes necesarios
+install.packages("pacman")
 library(pacman)
 packages <- c("tidyverse", "janitor", "readxl", "rstudioapi", "openxlsx",
               "dplyr", "corrplot", "MVN", "factoextra", "ggplot2", "caret",
@@ -120,6 +121,7 @@ mvn(caracteristicas, mvnTest = "hz")
 
 #H0: Independencia para las variables
 #Ha: Las variables no son independientes
+
 
 p <- ncol(caracteristicas)
 n <- nrow(caracteristicas)
@@ -316,7 +318,10 @@ datos_lda <- datos_orig %>%
 set.seed(123)
 trainIndex <- createDataPartition(datos_lda$death_event, p = 0.8, list = FALSE)
 trainData <- datos_lda[trainIndex, ]
+write.csv(trainData, file = "train_data.csv", row.names = FALSE)
+
 testData <- datos_lda[-trainIndex, ]
+write.csv(testData, file = "test_data.csv", row.names = FALSE)
 
 # Separar datos por clase
 dead <- trainData %>% filter(death_event == 1) %>% select(-death_event)
@@ -333,7 +338,7 @@ cov_a <- cov(alive)
 # Calcular matriz de covarianza agrupada
 n1 <- nrow(dead)
 n2 <- nrow(alive)
-sp <- ((n1 - 1) * vd + (n2 - 1) * va) / (n1 + n2 - 2)
+sp <- ((n1 - 1) * cov_d + (n2 - 1) * cov_a) / (n1 + n2 - 2)
 
 # Calcular coeficientes de discriminación
 inv_sp <- solve(sp)
@@ -357,6 +362,34 @@ predictions <- apply(X_test, 1, function(row) {
 
 # Crear matriz de confusión
 confusionMatrix(as.factor(predictions), y_test)
+
+# Normalizar datos para PCA
+trainData_scaled <- trainData %>%
+  select(-death_event) %>%
+  scale()
+
+# Realizar PCA
+pca_result <- prcomp(trainData_scaled, center = TRUE, scale. = TRUE)
+
+# Crear un data frame con las componentes principales
+pca_data <- data.frame(pca_result$x, death_event = trainData$death_event)
+
+
+# Graficar los resultados del PCA
+ggplot(pca_data, aes(x = PC1, y = PC2, color = death_event)) +
+  geom_point(alpha = 0.8, size = 3) +
+  scale_color_manual(values = c("0" = "darkblue", "1" = "darkred")) +
+  labs(title = "Análisis de Componentes Principales (PCA)",
+       x = "Componente Principal 1 (PC1)", y = "Componente Principal 2 (PC2)",
+       color = "Estado del Paciente") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  )
+
 
 
 # TÉCNICA MULTIVARIADA: ANÁLISIS DE FACTORES
