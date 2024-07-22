@@ -1,7 +1,8 @@
 # Cargar paquetes necesarios
 library(pacman)
 packages <- c("tidyverse", "janitor", "readxl", "rstudioapi", "openxlsx",
-              "dplyr", "corrplot", "MVN", "factoextra", "ggplot2", "caret")
+              "dplyr", "corrplot", "MVN", "factoextra", "ggplot2", "caret",
+              "psych")
 pacman::p_load(char = packages, character.only = TRUE)
 
 # Configurar el directorio de trabajo
@@ -292,3 +293,33 @@ predictions <- apply(X_test, 1, function(row) {
 
 # Crear matriz de confusión
 confusionMatrix(as.factor(predictions), y_test)
+
+
+# TÉCNICA MULTIVARIADA: ANÁLISIS DE FACTORES
+
+# Graficar el criterio del codo
+calcular_varianza_explicada <- function(datos, max_factors) {
+  varianza_explicada <- numeric(max_factors)
+  
+  for (n in 1:max_factors) {
+    fa_result <- fa(datos, nfactors = n, rotate = "varimax")
+    varianza_explicada[n] <- sum(fa_result$values) / sum(eigen(cor(datos))$values)
+  }
+  
+  return(varianza_explicada)
+}
+
+# Número máximo de factores a considerar
+max_factors <- 4
+
+# Calcular la varianza explicada
+varianza_explicada <- calcular_varianza_explicada(cp, max_factors)
+
+# Graficar el criterio del codo
+plot(1:max_factors, varianza_explicada, type = "b", pch = 19,
+     xlab = "Número de factores", ylab = "Varianza explicada",
+     main = "Criterio del codo para selección de factores")
+
+# Realizar el análisis de 2 factores (seleccionados por el criterio del codo)
+fa_result <- fa(cp, nfactors = 2, rotate = "varimax")
+
