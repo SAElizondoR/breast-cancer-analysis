@@ -135,23 +135,25 @@ media_a <- colMeans(alive) %>% matrix(ncol = 1)
 vd <- cov(dead)
 va <- cov(alive)
 
+# Tamaño de las muestras
 n1 <- nrow(dead)
 n2 <- nrow(alive)
 
-# Calcular matriz de covarianza ponderada
+# Calcular matriz de covarianza ponderada y ajustada
 sp <- ((n1 - 1) * vd + (n2 - 1) * va) / (n1 + n2 - 2)
 sp_esc <- sp * (1 / n1 + 1 / n2)
 
 # Calcular estadístico T²
-t(media_d - media_a) %*% solve(sp_esc) %*% (media_d - media_a)
+delta <- media_d - media_a
+t(delta) %*% solve(sp_esc) %*% delta
 # EP = 6.74
 
 # Calcular valor crítico F y región de rechazo
 valor_f <- qf(1 - 0.05, p, n1 + n2 - p - 1)
-region_rechazo <- valor_f * p * (n1 + n2 - 2) / (n1 + n2 - p - 1) # RR 11.00
+region_rechazo <- valor_f * p * (n1 + n2 - 2) / (n1 + n2 - p - 1) # RR = 11.00
 
-# Rechazo H0 si 6.74 > 11.00
-# No rechazo H0
+# Rechazo H0 si t² > región de rechazo
+# En este caso: 6.74 < 11.00, por lo que no se rechaza H0
 # El vector de medias no difiere entre pacientes que murieron y no
 
 # Calcular intervalos de confianza
@@ -170,39 +172,44 @@ data.frame(
 #H0: El vector de medias no difiere entre pacientes masculinos y femeninos
 #Ha: El vector de medias difiere entre pacientes masculinos y femeninos
 
-masc <- as.data.frame(read_excel("muestra_heart.xlsx"))%>% 
-  clean_names() %>% filter(sex == 1) %>% select(-death_event,-sex)
-fem<-as.data.frame(read_excel("muestra_heart.xlsx"))%>% 
-  clean_names() %>% filter(sex == 0) %>% select(-death_event,-sex)
+# Filtrar datos de pacientes masculinos y femeninos
+masc <- datos_orig %>% filter(sex == 1) %>% select(-death_event, -sex)
+fem <- datos_orig %>% filter(sex == 0) %>% select(-death_event, -sex)
 
-media_m<-colMeans(masc) #vector de medias
-media_f<-colMeans(fem)
-vm<-cov(masc) #matriz de varianza y covarianza
-vf<-cov(fem)
+# Calcular vectores de medias y matrices de covarianza
+media_m <- colMeans(masc) %>% matrix(ncol = 1)
+media_f <- colMeans(fem) %>% matrix(ncol = 1)
+vm <- cov(masc)
+vf <- cov(fem)
 
-n1<-33
-n2<-17
+# Tamaño de las muestras
+n1 <- nrow(masc)
+n2 <- nrow(fem)
 
-sp<-((n1-1)*vm+(n2-1)*vf)/(n1+n2-2)
-t(media_m-media_f)%*%solve(((1/n1)+(1/n2))*sp)%*%(media_m-media_f)#EP 8.32
+# Calcular matriz de covarianza ponderada y ajustada
+sp <- ((n1 - 1) * vm + (n2 - 1) * vf) / (n1 + n2 - 2)
+sp_esc <- sp * (1 / n1 + 1 / n2)
 
-#Region rechazo
-qf(1-0.05,4,n1+n2-2)#valor f
-qf(1-0.05,4,n1+n2-2)*4*(n1+n2-2)/(n1+n2-4-1)#RR 10.94
+# Calcular estadístico T²
+delta <- media_m - media_f
+t(delta) %*% solve(sp_esc) %*% delta # EP = 8.32
 
-#Rechazo H0 si 8.32 > 10.94
-#NO rechazo H0
-#El vector de medias no difiere entre pacientes masculinos y femeninos
+# Calcular valor crítico F y región de rechazo
+valor_f <- qf(1 - 0.05, p, n1 + n2 - p - 1)
+region_rechazo <- valor_f * p * (n1 + n2 - 2) / (n1 + n2 - p - 1) # RR = 11.00
 
-sp_esc<-((n1-1)*vm+(n2-1)*vf)/(n1+n2-2)*(1/n1+1/n2)
-p<-4
+# Rechazo H0 si t² > región de rechazo
+# En este caso: 8.32 < 11.00, por lo que no se rechaza H0
+# El vector de medias no difiere entre pacientes masculinos y femeninos
 
-lim_inf<- (media_m-media_f)-sqrt(qf(1-0.05,p,n1+n2-p-1)*p*(n1+n2-2)/(n1+n2-p-1)*diag(sp_esc))
-lim_sup<-(media_m-media_f)+sqrt(qf(1-0.05,p,n1+n2-p-1)*p*(n1+n2-2)/(n1+n2-p-1)*diag(sp_esc))
+# Calcular intervalos de confianza
+sqrt_aux <- sqrt(region_rechazo * diag(sp_esc))
+lim_inf <- delta - sqrt_aux
+lim_sup <- delta + sqrt_aux
 
-sex.ints_conf <- data.frame(
+data.frame(
   Inferior = lim_inf,
-  Media = media_m-media_f,
+  Media = delta,
   Superior = lim_sup
 )
 
