@@ -29,8 +29,8 @@ summary(datos)
 #Histogramas
 
 hist(datos$age,
-     main = "Histograma de Eyección",
-     xlab = "Porcentaje de Eyección",
+     main = "Histograma de Edad",
+     xlab = "Edad",
      ylab = "Frecuencia",
      col = "royalblue3",
      ylim = c(0, 50),
@@ -74,6 +74,19 @@ hist(datos$serum_creatinine,
 
 
 #Graficas de pie
+
+
+pie(table(datos_orig$sex),
+    labels = paste(c("Mujeres", "Hombres"), 
+                   "(", round(prop.table(table(datos_orig$sex)) * 100, 1), "%)"),
+    main = "Distribución por Sexo",
+    col = c("lightblue", "lightcoral"))
+
+pie(table(datos_orig$death_event),
+    labels = paste(c("No Fallecido", "Fallecido"), 
+                   "(", round(prop.table(table(datos_orig$death_event)) * 100, 1), "%)"),
+    main = "Distribución por Caso",
+    col = c("green4", "navyblue"))
 
 
 
