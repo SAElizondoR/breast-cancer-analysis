@@ -56,45 +56,65 @@ mvn(caracteristicas, mvnTest = "hz")
 
 R <- cor(caracteristicas)
 
+# Calcular estadístico de prueba
 -2 * (1 - ((8 + 11) / (6 * 50))) * log(det(R)**(50 / 2)) #EP = 8.77
 
+# Calcular valor crítico
 qchisq(1 - 0.05, 4 * (1 + 4) / 2) # RR = 18.31
 
 # Rechazo H0 si EP = 8.77 > RR = 18.31
 
 # No rechazo H0, las variables son independientes
-#Las variables de edad, ejection_fraction, platelets y serum_sodium
+
+# Las variables de edad, ejection_fraction, platelets y serum_sodium
 # son independientes 
 
 
-##Prueba de medias
+## Prueba de medias
 
-#H0: Las media para edad = 60, media para ejection = 60, de platelets =275000, de serum_sodium =140
-#H0: Se tienen medias distintas a las planteadas
+#H0: Las medias para edad = 60, ejection = 60, platelets =275000,
+#    serum_sodium =140
+#H0: Las medias son distintas a las planteadas
 
-mu_hipotesis <- matrix(c(60, 60, 275000, 140),ncol=1)
+# Definir medias hipotéticas
+mu_hipotesis <- matrix(c(60, 60, 275000, 140), ncol = 1)
 
-x.barras<-matrix(c(mean(datos$age),mean(datos$ejection_fraction),
-                   mean(datos$platelets),mean(datos$serum_sodium)),ncol=1)
-covs<-cov(caracteristicas)
-inv_cov<-solve(cov(caracteristicas))
-t2<-50*t(x.barras-mu_hipotesis)%*%inv_cov%*%(x.barras-mu_hipotesis)
-n<-50
-p<-4
-1-pf((n-p)*t2/((n-1)*p),p,n-p)
-#Rechazo H0 si p-valor= 6.7 x 10^-17 < alfa = 0.05
-#Rechazo H0
-#No hay evidencia suficiente para decir que las medias son las sugeridas
+# Calcular medias observadas
+x_barra <- colMeans(datos %>% select(age, ejection_fraction, platelets,
+                                     serum_sodium)) %>%
+  matrix(ncol = 1)
 
-##I.C.
+# Calcular matriz de covarianza
+covs <- cov(caracteristicas)
+inv_cov <- solve(cov(caracteristicas))
 
-aux<-qf(1-0.05,p,n-p)*p*(n-1)/(n*(n-p))
+# Calcular estadístico T²
+n <- nrow(datos)
+p <- length(mu_hipotesis)
+t2 <- n * t(x_barra - mu_hipotesis) %*% inv_cov %*% (x_barra - mu_hipotesis)
 
-c(x.barras[1]-sqrt(aux*covs[1,1]),x.barras[1]+sqrt(aux*covs[1,1]))    
-c(x.barras[2]-sqrt(aux*covs[2,2]),x.barras[2]+sqrt(aux*covs[2,2]))
-c(x.barras[3]-sqrt(aux*covs[3,3]),x.barras[3]+sqrt(aux*covs[3,3]))
-c(x.barras[4]-sqrt(aux*covs[4,4]),x.barras[4]+sqrt(aux*covs[4,4]))
+# Calcular valor p
+1 - pf((n - p) * t2 / ((n - 1) * p), p, n - p)
 
+# Rechazo H0 si p-valor = 6.7 x 10^-16 < alfa = 0.05
+# Rechazo H0
+# Las medias son distintas a las planteadas
+
+## Intervalos de confianza (I. C.)
+
+# Calcular factor auxiliar para los intervalos de confianza
+aux <- qf(1 - 0.05, p, n - p) * p * (n - 1) / (n * (n - p))
+
+# Calcular e imprimir intervalos de confianza
+ic <- function(media, varianza) {
+  sqrt_aux <- sqrt(aux * varianza)
+  c(media - sqrt_aux, media + sqrt_aux)
+}
+
+ic_values <- sapply(1:p, function(i) ic(x_barra[i], covs[i, i]))
+rownames(ic_values) <- c("Límite inferior", "Límite superior")
+colnames(ic_values) <- c("age", "ejection_fraction", "platelets",
+                         "serum_sodium")
 
 
 #Diferencia vector de medias MUERTE
