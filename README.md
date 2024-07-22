@@ -1,2 +1,2 @@
-# breast-cancer-analysis
-Breast cancer data analysis in R
+# heart-analysis
+Heart data analysis in R
