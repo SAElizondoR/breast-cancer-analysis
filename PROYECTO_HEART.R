@@ -8,8 +8,10 @@ pacman::p_load(char = packages, character.only = TRUE)
 setwd(dirname(getActiveDocumentContext()$path))
 
 # Cargar y limpiar datos
-datos <- as.data.frame(read_excel("muestra_heart.xlsx")) %>%
-  clean_names() %>%
+datos_orig <- as.data.frame(read_excel("muestra_heart.xlsx")) %>%
+  clean_names()
+
+datos <- datos_orig %>%
   select(-death_event, -sex)
 
 ## 1. ANÁLISIS EXPLORATORIO DE LOS DATOS ######################################
@@ -79,14 +81,15 @@ qchisq(1 - 0.05, p * (p - 1) / 2) # RR = 12.59
 #H0: Las medias son distintas a las planteadas
 
 # Definir medias hipotéticas
-mu_hipotesis <- matrix(c(60, 60, 275000, 140), ncol = 1)
+mu_hipotesis <- c(60, 60, 275000, 140) %>%
+  matrix(ncol = 1)
 
 # Calcular medias observadas
 x_barra <- colMeans(datos %>% select(age, ejection_fraction, platelets,
                                      serum_sodium)) %>%
   matrix(ncol = 1)
 
-# Calcular matriz de covarianza
+# Calcular matriz de covarianza y su inversa
 covs <- cov(caracteristicas)
 inv_cov <- solve(cov(caracteristicas))
 
@@ -122,39 +125,43 @@ colnames(ic_values) <- c("age", "ejection_fraction", "platelets",
 #H0: El vector de medias no difiere entre pacientes que murieron y no
 #Ha: El vector de medias difiere entre pacientes que murieron y no
 
-dead <- as.data.frame(read_excel("muestra_heart.xlsx"))%>% 
-  clean_names() %>% filter(death_event == 1) %>% select(-death_event,-sex)
-alive<-as.data.frame(read_excel("muestra_heart.xlsx"))%>% 
-  clean_names() %>% filter(death_event == 0) %>% select(-death_event,-sex)
+# Filtrar datos de pacientes muertos y vivos
+dead <- datos_orig %>% filter(death_event == 1) %>% select(-death_event,-sex)
+alive <- datos_orig %>% filter(death_event == 0) %>% select(-death_event,-sex)
 
-media_d<-colMeans(dead) #vector de medias
-media_a<-colMeans(alive)
-vd<-cov(dead) #matriz de varianza y covarianza
-va<-cov(alive)
+# Calcular vectores de medias y matrices de covarianza
+media_d <- colMeans(dead) %>% matrix(ncol = 1)
+media_a <- colMeans(alive) %>% matrix(ncol = 1)
+vd <- cov(dead)
+va <- cov(alive)
 
-n1<-15
-n2<-35
+n1 <- nrow(dead)
+n2 <- nrow(alive)
 
-sp<-((n1-1)*vd+(n2-1)*va)/(n1+n2-2)
-t(media_d-media_a)%*%solve(((1/n1)+(1/n2))*sp)%*%(media_d-media_a)#EP 6.74
+# Calcular matriz de covarianza ponderada
+sp <- ((n1 - 1) * vd + (n2 - 1) * va) / (n1 + n2 - 2)
+sp_esc <- sp * (1 / n1 + 1 / n2)
 
-#Region rechazo
-qf(1-0.05,4,n1+n2-2)#valor f
-qf(1-0.05,4,n1+n2-2)*4*(n1+n2-2)/(n1+n2-4-1)#RR 10.94
+# Calcular estadístico T²
+t(media_d - media_a) %*% solve(sp_esc) %*% (media_d - media_a)
+# EP = 6.74
 
-#Rechazo H0 si 6.74 > 10.94
-#NO rechazo H0
-#El vector de medias no difiere entre pacientes que murieron y no
+# Calcular valor crítico F y región de rechazo
+valor_f <- qf(1 - 0.05, p, n1 + n2 - p - 1)
+region_rechazo <- valor_f * p * (n1 + n2 - 2) / (n1 + n2 - p - 1) # RR 11.00
 
-sp_esc<-((n1-1)*vd+(n2-1)*va)/(n1+n2-2)*(1/n1+1/n2)
-p<-4
+# Rechazo H0 si 6.74 > 11.00
+# No rechazo H0
+# El vector de medias no difiere entre pacientes que murieron y no
 
-lim_inf<- (media_d-media_a)-sqrt(qf(1-0.05,p,n1+n2-p-1)*p*(n1+n2-2)/(n1+n2-p-1)*diag(sp_esc))
-lim_sup<-(media_d-media_a)+sqrt(qf(1-0.05,p,n1+n2-p-1)*p*(n1+n2-2)/(n1+n2-p-1)*diag(sp_esc))
+# Calcular intervalos de confianza
+sqrt_aux <- sqrt(region_rechazo * diag(sp_esc))
+lim_inf <- media_d - media_a - sqrt_aux
+lim_sup <- media_d - media_a + sqrt_aux
 
-death.ints_conf <- data.frame(
+data.frame(
   Inferior = lim_inf,
-  Media = media_d-media_a,
+  Media = media_d - media_a,
   Superior = lim_sup
 )
 
