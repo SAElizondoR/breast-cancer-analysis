@@ -1,7 +1,7 @@
 # Cargar paquetes necesarios
 library(pacman)
 packages <- c("tidyverse", "janitor", "readxl", "rstudioapi", "openxlsx",
-              "dplyr", "corrplot", "MVN", "factoextra", "ggplot2")
+              "dplyr", "corrplot", "MVN", "factoextra", "ggplot2", "caret")
 pacman::p_load(char = packages, character.only = TRUE)
 
 # Configurar el directorio de trabajo
@@ -239,3 +239,56 @@ pca_result$rotation[, 1:num_components]
 
 # Conjunto de datos transformado al nuevo espacio
 pca_result$x[, 1:num_components]
+
+# TÉCNICA MULTIVARIADA: ANÁLISIS DISCRIMINANTE
+
+# Filtrar datos para el análisis discriminante
+datos_lda <- datos_orig %>%
+  select(-sex) %>%
+  mutate(death_event = as.factor(death_event))
+
+# Dividir datos en conjunto de entrenamiento y prueba
+set.seed(123)
+trainIndex <- createDataPartition(datos_lda$death_event, p = 0.8, list = FALSE)
+trainData <- datos_lda[trainIndex, ]
+testData <- datos_lda[-trainIndex, ]
+
+# Separar datos por clase
+dead <- trainData %>% filter(death_event == 1) %>% select(-death_event)
+alive <- trainData %>% filter(death_event == 0) %>% select(-death_event)
+
+# Calcular medias de las clases
+media_d <- colMeans(dead) %>% matrix(ncol = 1)
+media_a <- colMeans(alive) %>% matrix(ncol = 1)
+
+# Calcular matrices de varianza-covarianza
+cov_d <- cov(dead)
+cov_a <- cov(alive)
+
+# Calcular matriz de covarianza agrupada
+n1 <- nrow(dead)
+n2 <- nrow(alive)
+sp <- ((n1 - 1) * vd + (n2 - 1) * va) / (n1 + n2 - 2)
+
+# Calcular coeficientes de discriminación
+inv_sp <- solve(sp)
+delta <- media_d - media_a
+w <- t(delta) %*% inv_sp
+b <- -0.5 * (t(media_d) %*% inv_sp %*% media_d - t(media_a) %*% inv_sp %*% media_a)
+
+# Función discriminante
+discriminante <- function(x, w, b) {
+  w %*% x + b
+}
+
+# Realizar predicciones en el conjunto de prueba
+X_test <- as.matrix(testData %>% select(-death_event))
+y_test <- testData$death_event
+
+# Aplicar función discriminante
+predictions <- apply(X_test, 1, function(row) {
+  ifelse(discriminante(as.matrix(row), w, b) > 0, 1, 0)
+})
+
+# Crear matriz de confusión
+confusionMatrix(as.factor(predictions), y_test)
